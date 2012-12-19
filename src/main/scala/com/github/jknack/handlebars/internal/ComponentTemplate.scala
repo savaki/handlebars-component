@@ -5,37 +5,47 @@ import scala.collection.JavaConversions._
 import com.twitter.util.Future
 import java.io.Writer
 import com.github.savaki.handlebars.{Handlebars, ComponentContext, ComponentResponse, ComponentRequest}
+import java.lang.reflect.Field
 
 /**
  * @author matt.ho@gmail.com
  */
 class ComponentTemplate(handlebars: Handlebars, template: Template) {
-  val blocks: List[Block] = template match {
-    case list: TemplateList => {
-      list.iterator().toList.map {
-        template => template match {
-          case block: Block if handlebars.helperName.equalsIgnoreCase(block.name()) => block
-          case _ => null
-        }
-      }.filter(_ != null)
-    }
-    case _ => Nil
+  /**
+   * the list of blocks that reference components
+   */
+  private val blocks: List[Block] = findBlocks(template)
+
+  private def findBlocksWithinPartial(partial: Partial): List[Block] = {
+    val field: Field = partial.getClass.getDeclaredField("template")
+    field.setAccessible(true)
+    val partialTemplate: Template = field.get(partial).asInstanceOf[Template]
+    findBlocks(partialTemplate)
   }
 
-  val blocksWithParams = blocks.map {
-    action => action -> new ParamExtractor(action, handlebars.underlying).paramsToString().split(" ")
+  private def findBlocks(template: Template): List[Block] = {
+    template match {
+      case block: Block if handlebars.helperName.equalsIgnoreCase(block.name()) => List(block)
+      case partial: Partial => findBlocksWithinPartial(partial)
+      case list: TemplateList => list.toList.flatMap(t => findBlocks(t))
+      case _ => List[Block]()
+    }
+  }
+
+  private val blocksWithParams = blocks.map {
+    block => block.body() -> new ParamExtractor(block, handlebars.underlying).paramsToString().split(" ")
   }
 
   def render(context: ComponentContext): Future[String] = {
     val futures: Future[Map[Template, ComponentResponse]] = Future.collect {
       blocksWithParams.map {
         entry => {
-          val block: Block = entry._1
+          val template: Template = entry._1
           val params: Array[String] = entry._2
           val name = params.head
           val args = params.tail
           val request = ComponentRequest(name, args: _*)
-          context.service(request).map(response => block.body() -> response)
+          context.service(request).map(response => template -> response)
         }
       }
     }.map(_.toMap)
