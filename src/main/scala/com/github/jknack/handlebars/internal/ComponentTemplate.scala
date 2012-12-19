@@ -23,6 +23,12 @@ class ComponentTemplate(handlebars: Handlebars, template: Template) {
     findBlocks(partialTemplate)
   }
 
+  /**
+   * recursively go through and find blocks that reference our magic handlebars helper
+   *
+   * @param template the root template to search from
+   * @return the list of blocks that utilize our magic help
+   */
   private def findBlocks(template: Template): List[Block] = {
     template match {
       case block: Block if handlebars.helperName.equalsIgnoreCase(block.name()) => List(block)

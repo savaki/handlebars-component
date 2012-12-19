@@ -2,7 +2,7 @@ name := "handlebars-component"
 
 organization := "com.github.savaki"
 
-version := "SNAPSHOT"
+version := "0.1"
 
 resolvers += "Twitter Repo" at "http://maven.twttr.com"
 
