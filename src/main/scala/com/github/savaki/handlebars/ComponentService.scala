@@ -54,3 +54,20 @@ trait ComponentService extends Service[ComponentRequest, ComponentResponse] {
     new ComponentContext(this, attributes)
   }
 }
+
+case class ComponentRequest(context: ComponentContext, name: String, args: String*)
+
+case class ComponentResponse(context: util.Map[String, Any] = new util.HashMap())
+
+/**
+ * @author matt.ho@gmail.com
+ */
+case class ComponentContext(service: ComponentService, attributes: Map[String, Any] = Map()) {
+  val context: util.Map[String, Any] = {
+    val map = new util.HashMap[String, Any]()
+    attributes.foreach {
+      entry => map.put(entry._1, entry._2)
+    }
+    util.Collections.unmodifiableMap[String, Any](map)
+  }
+}

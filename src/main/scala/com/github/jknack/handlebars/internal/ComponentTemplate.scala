@@ -50,7 +50,7 @@ class ComponentTemplate(handlebars: Handlebars, template: Template) {
           val params: Array[String] = entry._2
           val name = params.head
           val args = params.tail
-          val request = ComponentRequest(name, args: _*)
+          val request = ComponentRequest(context, name, args: _*)
           context.service(request).map(response => template -> response)
         }
       }
