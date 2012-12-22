@@ -9,10 +9,9 @@ class SampleComponent extends Component {
   SampleComponent.newInstanceCount = SampleComponent.newInstanceCount + 1
 
   def apply(request: ComponentRequest): Future[ComponentResponse] = {
-    println("SampleComponent#apply")
-    val response: ComponentResponse = new ComponentResponse
-    response.context.put("name", "matt")
-    Future.value(response)
+    Future.value {
+      ComponentResponse(Map("name" -> "matt"))
+    }
   }
 }
 

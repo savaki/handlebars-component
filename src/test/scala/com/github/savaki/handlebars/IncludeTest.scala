@@ -16,7 +16,7 @@ class IncludeTest extends FlatSpec with ShouldMatchers {
     handlebars.addToPackages(getClass.getPackage.getName)
 
     val template: ComponentTemplate = handlebars.compile(new URI("include"))
-    val htmlFuture: Future[String] = template.render(handlebars.buildContext())
+    val htmlFuture: Future[String] = template.render()
     val html: String = htmlFuture.get()
 
     // from sample.hbs
@@ -33,7 +33,7 @@ class IncludeTest extends FlatSpec with ShouldMatchers {
     handlebars.addToPackages(getClass.getPackage.getName)
 
     val template: ComponentTemplate = handlebars.compile(new URI("multilevel_include"))
-    val htmlFuture: Future[String] = template.render(handlebars.buildContext())
+    val htmlFuture: Future[String] = template.render()
     val html: String = htmlFuture.get()
 
     // from sample.hbs

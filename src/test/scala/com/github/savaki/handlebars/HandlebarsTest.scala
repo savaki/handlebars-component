@@ -14,10 +14,9 @@ class HandlebarsTest extends FlatSpec with ShouldMatchers {
   "Handlebars" should "render template with component" in {
     val service = new Handlebars(new FileTemplateLoader("src/main/webapp"))
     service.addToPackages(this.getClass.getPackage.getName)
-    val context: ComponentContext = service.buildContext()
 
     val template: ComponentTemplate = service.compile(new URI("sample"))
-    val htmlFuture: Future[String] = template.render(context)
+    val htmlFuture: Future[String] = template.render()
     val html: String = htmlFuture.get()
 
     html should include("hello %s" format "matt")

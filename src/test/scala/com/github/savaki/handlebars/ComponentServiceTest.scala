@@ -13,20 +13,20 @@ class ComponentServiceTest extends FlatSpec with ShouldMatchers {
     service.addToPackages(this.getClass.getPackage.getName)
     SampleComponent.newInstanceCount = 0
 
-    service(ComponentRequest(service.buildContext(), "SampleComponent")).get()
+    service(ComponentRequest(Map(), "SampleComponent")).get()
     SampleComponent.newInstanceCount should be(1)
 
-    service(ComponentRequest(service.buildContext(), "SampleComponent")).get()
+    service(ComponentRequest(Map(), "SampleComponent")).get()
     SampleComponent.newInstanceCount should be(1) // no new instances created
 
-    service(ComponentRequest(service.buildContext(), "SampleComponent")).get()
+    service(ComponentRequest(Map(), "SampleComponent")).get()
     SampleComponent.newInstanceCount should be(1) // no new instances created
   }
 
   it should "render content" in {
     val service = new Handlebars(new ClassTemplateLoader())
     service.addToPackages(this.getClass.getPackage.getName)
-    service(ComponentRequest(service.buildContext(), "SampleComponent")).get()
+    service(ComponentRequest(Map(), "SampleComponent")).get()
   }
 }
 

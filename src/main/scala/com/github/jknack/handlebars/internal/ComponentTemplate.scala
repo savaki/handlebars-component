@@ -4,7 +4,7 @@ import com.github.jknack.handlebars.{Context, Template, Handlebars => H}
 import scala.collection.JavaConversions._
 import com.twitter.util.Future
 import java.io.Writer
-import com.github.savaki.handlebars.{Handlebars, ComponentContext, ComponentResponse, ComponentRequest}
+import com.github.savaki.handlebars.{Handlebars, ComponentRequest}
 import java.lang.reflect.Field
 
 /**
@@ -42,22 +42,37 @@ class ComponentTemplate(handlebars: Handlebars, template: Template) {
     block => block.body() -> new ParamExtractor(block, handlebars.underlying).paramsToString().split(" ")
   }
 
-  def render(context: ComponentContext): Future[String] = {
-    val futures: Future[Map[Template, ComponentResponse]] = Future.collect {
+  /**
+   * wrap the specified object in a handlebars context
+   *
+   * @param model the object being wrapped
+   * @return
+   */
+  private def newContext(model: AnyRef): Context = {
+    Context.newBuilder(model).resolver(handlebars.resolvers: _*).build()
+  }
+
+  def render(model: Map[String, Any] = Map()): Future[String] = {
+    val futures: Future[Map[Template, Context]] = Future.collect {
       blocksWithParams.map {
         entry => {
           val template: Template = entry._1
           val params: Array[String] = entry._2
           val name = params.head
           val args = params.tail
-          val request = ComponentRequest(context, name, args: _*)
-          context.service(request).map(response => template -> response)
+          val request = ComponentRequest(model, name, args: _*)
+          handlebars(request).map {
+            response => template -> newContext(response.model)
+          }
         }
       }
     }.map(_.toMap)
 
     futures.map {
-      responses => template(Map(handlebars.propertyName -> responses) ++ context.context)
+      responses => {
+        val context = newContext(Map(handlebars.propertyName -> responses) ++ model)
+        template(context)
+      }
     }
   }
 

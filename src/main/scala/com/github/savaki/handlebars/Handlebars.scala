@@ -1,6 +1,6 @@
 package com.github.savaki.handlebars
 
-import com.github.jknack.handlebars.{Handlebars => H, Template => T, Helper, TemplateLoader}
+import com.github.jknack.handlebars.{Handlebars => H, Template => T, ValueResolver, Helper, TemplateLoader}
 import com.github.jknack.handlebars.internal.{ComponentHelper, ComponentTemplate}
 import java.net.URI
 
@@ -14,14 +14,22 @@ import java.net.URI
  * @param propertyName the name of the context property that stores the results of component execution
  */
 class Handlebars(loader: TemplateLoader, cache: TemplateCache = NoCache, val helperName: String = "render", val propertyName: String = "_responses") extends ComponentService {
+  /**
+   * custom resolvers used by handlebars-component to render context values
+   */
+  var resolvers: Array[ValueResolver] = Array(new MapValueResolver, new ScalaValueResolver)
+
+  /**
+   * a reference to the underlying handlebars implementation
+   */
   val underlying: H = {
     val handlebars: H = new H(loader)
     handlebars.registerHelper(helperName, new ComponentHelper(propertyName))
     handlebars
   }
 
-  val DELIM_START = "{{"
-  val DELIM_END = "}}"
+  var DELIM_START = "{{"
+  var DELIM_END = "}}"
 
   def compileString(inline: String, delimStart: String = DELIM_START, delimEnd: String = DELIM_END): ComponentTemplate = {
     loadTemplate(inline) {
