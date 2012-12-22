@@ -62,7 +62,7 @@ class ComponentTemplate(handlebars: Handlebars, template: Template) {
           val args = params.tail
           val request = ComponentRequest(model, name, args: _*)
           handlebars(request).map {
-            response => template -> newContext(response.model)
+            response => template -> newContext(model ++ response.model)
           }
         }
       }
