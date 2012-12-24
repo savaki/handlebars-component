@@ -42,16 +42,6 @@ class ComponentTemplate(handlebars: Handlebars, template: Template) {
     block => block.body() -> new ParamExtractor(block, handlebars.underlying).paramsToString().split(" ")
   }
 
-  /**
-   * wrap the specified object in a handlebars context
-   *
-   * @param model the object being wrapped
-   * @return
-   */
-  private def newContext(model: AnyRef): Context = {
-    Context.newBuilder(model).resolver(handlebars.resolvers: _*).build()
-  }
-
   def render(model: Map[String, Any] = Map()): Future[String] = {
     val futures: Future[Map[Template, Context]] = Future.collect {
       blocksWithParams.map {
@@ -62,7 +52,7 @@ class ComponentTemplate(handlebars: Handlebars, template: Template) {
           val args = params.tail
           val request = ComponentRequest(model, name, args: _*)
           handlebars(request).map {
-            response => template -> newContext(model ++ response.model)
+            response => template -> Handlebars.newContext(model ++ response.model)
           }
         }
       }
@@ -70,7 +60,7 @@ class ComponentTemplate(handlebars: Handlebars, template: Template) {
 
     futures.map {
       responses => {
-        val context = newContext(Map(handlebars.propertyName -> responses) ++ model)
+        val context = Handlebars.newContext(Map(handlebars.propertyName -> responses) ++ model)
         template(context)
       }
     }

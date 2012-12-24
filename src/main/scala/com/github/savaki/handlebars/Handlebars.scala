@@ -1,6 +1,6 @@
 package com.github.savaki.handlebars
 
-import com.github.jknack.handlebars.{Handlebars => H, Template => T, ValueResolver, Helper, TemplateLoader}
+import com.github.jknack.handlebars.{Handlebars => H, Template => T, Context, ValueResolver, Helper, TemplateLoader}
 import com.github.jknack.handlebars.internal.{ComponentHelper, ComponentTemplate}
 import java.net.URI
 
@@ -15,16 +15,12 @@ import java.net.URI
  */
 class Handlebars(loader: TemplateLoader, cache: TemplateCache = NoCache, val helperName: String = "render", val propertyName: String = "_responses") extends ComponentService {
   /**
-   * custom resolvers used by handlebars-component to render context values
-   */
-  var resolvers: Array[ValueResolver] = Array(new MapValueResolver, new ScalaValueResolver)
-
-  /**
    * a reference to the underlying handlebars implementation
    */
   val underlying: H = {
     val handlebars: H = new H(loader)
     handlebars.registerHelper(helperName, new ComponentHelper(propertyName))
+    handlebars.registerHelper("each", new EachHelper)
     handlebars
   }
 
@@ -57,6 +53,27 @@ class Handlebars(loader: TemplateLoader, cache: TemplateCache = NoCache, val hel
 
     } else {
       template
+    }
+  }
+}
+
+object Handlebars {
+  /**
+   * custom resolvers used by handlebars-component to render context values
+   */
+  var resolvers: Array[ValueResolver] = Array(new MapValueResolver, new ScalaValueResolver)
+
+  /**
+   * wrap the specified object in a handlebars context
+   *
+   * @param model the object being wrapped
+   * @return
+   */
+  def newContext(model: AnyRef): Context = {
+    if (model.isInstanceOf[Context]) {
+      model.asInstanceOf[Context]
+    } else {
+      Context.newBuilder(model).resolver(resolvers: _*).build()
     }
   }
 }
